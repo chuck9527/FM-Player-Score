@@ -1,51 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-import json
+import sqlite3
 import os
 import datetime
 from html.parser import HTMLParser
-
-ATTRIBUTE_WEIGHTS = {
-    '传球': { 'w1': 0.7000, 'w2': -0.0833, 'w3': 0.4667, 'w2_sp': None, 'w3_sp': None },
-    '传中': { 'w1': 0.5800, 'w2': -0.4000, 'w3': 0.4167, 'w2_sp': None, 'w3_sp': None },
-    '盯人': { 'w1': 0.1600, 'w2': -0.2717, 'w3': 0.5500, 'w2_sp': None, 'w3_sp': None },
-    '点球': { 'w1': 0.0000, 'w2': 0.0000, 'w3': 0.0000, 'w2_sp': None, 'w3_sp': None },
-    '技术': { 'w1': -0.7200, 'w2': 0.0167, 'w3': 0.3833, 'w2_sp': None, 'w3_sp': None },
-    '角球': { 'w1': 0.0000, 'w2': 0.0000, 'w3': 0.0000, 'w2_sp': None, 'w3_sp': None },
-    '界外球': { 'w1': 0.0000, 'w2': 0.0000, 'w3': 0.0000, 'w2_sp': None, 'w3_sp': None },
-    '盘带': { 'w1': 1.2000, 'w2': 1.5333, 'w3': 1.3667, 'w2_sp': None, 'w3_sp': None },
-    '抢断': { 'w1': 0.7000, 'w2': -0.6167, 'w3': 0.5000, 'w2_sp': None, 'w3_sp': None },
-    '任意球': { 'w1': 0.0000, 'w2': 0.0000, 'w3': 0.0000, 'w2_sp': None, 'w3_sp': None },
-    '射门': { 'w1': 1.0600, 'w2': 0.3667, 'w3': 0.6667, 'w2_sp': None, 'w3_sp': None },
-    '停球': { 'w1': -0.1200, 'w2': 0.0167, 'w3': 0.6333, 'w2_sp': None, 'w3_sp': None },
-    '头球': { 'w1': 0.4600, 'w2': -0.0833, 'w3': 0.4667, 'w2_sp': None, 'w3_sp': None },
-    '远射': { 'w1': 0.2400, 'w2': 0.0833, 'w3': 0.8333, 'w2_sp': None, 'w3_sp': None },
-    '才华': { 'w1': -0.22, 'w2': 0, 'w3': 0, 'w2_sp': -0.125, 'w3_sp': 0.175 },
-    '位置': { 'w1': 1.4200, 'w2': -0.4333, 'w3': 0.6667, 'w2_sp': None, 'w3_sp': None },
-    '投入': { 'w1': 8.84, 'w2': 0, 'w3': 0, 'w2_sp': 2.2, 'w3_sp': 0.75 },
-    '集中': { 'w1': 3.0000, 'w2': 0.7500, 'w3': 0.6833, 'w2_sp': None, 'w3_sp': None },
-    '决断': { 'w1': 0.6000, 'w2': -0.7667, 'w3': 0.3667, 'w2_sp': None, 'w3_sp': None },
-    '领导力': { 'w1': -0.82, 'w2': 0, 'w3': 0, 'w2_sp': 0.275, 'w3_sp': 0.4 },
-    '侵略': { 'w1': 1.08, 'w2': 0, 'w3': 0, 'w2_sp': 0.225, 'w3_sp': 0.2625 },
-    '视野': { 'w1': 1.4000, 'w2': -0.6500, 'w3': 0.2000, 'w2_sp': None, 'w3_sp': None },
-    '合作': { 'w1': 0.4, 'w2': 0, 'w3': 0, 'w2_sp': -0.625, 'w3_sp': 0.1125 },
-    '无球跑': { 'w1': 0.0400, 'w2': -0.0333, 'w3': 0.2667, 'w2_sp': None, 'w3_sp': None },
-    '意志': { 'w1': 1.48, 'w2': 0, 'w3': 0, 'w2_sp': -0.125, 'w3_sp': 0.5875 },
-    '勇敢': { 'w1': -0.04, 'w2': 0, 'w3': 0.175, 'w2_sp': -0.4, 'w3_sp': None },
-    '预判': { 'w1': 1.4600, 'w2': 0.8833, 'w3': 0.9000, 'w2_sp': None, 'w3_sp': None },
-    '镇定': { 'w1': 1.5400, 'w2': 0.1333, 'w3': 0.3667, 'w2_sp': None, 'w3_sp': None },
-    '爆发': { 'w1': 4.9250, 'w2': 7.2083, 'w3': 4.7292, 'w2_sp': None, 'w3_sp': None },
-    '弹跳': { 'w1': 0.8400, 'w2': 1.3833, 'w3': 2.6000, 'w2_sp': None, 'w3_sp': None },
-    '灵活': { 'w1': 3.1000, 'w2': -0.3333, 'w3': 0.9667, 'w2_sp': None, 'w3_sp': None },
-    '耐力': { 'w1': 2.5600, 'w2': 0.8333, 'w3': 0.5167, 'w2_sp': None, 'w3_sp': None },
-    '平衡': { 'w1': 0.6600, 'w2': 1.6833, 'w3': 1.1667, 'w2_sp': None, 'w3_sp': None },
-    '强壮': { 'w1': -0.4000, 'w2': 1.2833, 'w3': 0.9500, 'w2_sp': None, 'w3_sp': None },
-    '速度': { 'w1': 5.9250, 'w2': 6.2292, 'w3': 4.8750, 'w2_sp': None, 'w3_sp': None },
-    '体质': { 'w1': 0.9400, 'w2': 1.5333, 'w3': 0.3000, 'w2_sp': None, 'w3_sp': None },
-    '稳定': { 'w1': 0.1, 'w2': 0, 'w3': 0, 'w2_sp': 0.3, 'w3_sp': 0.425 },
-    '大赛发挥': { 'w1': 0.44, 'w2': 0, 'w3': 0, 'w2_sp': 0.125, 'w3_sp': 0.375 },
-    '抗压': { 'w1': 3.64, 'w2': 0, 'w3': 0, 'w2_sp': 0.55, 'w3_sp': 0.8375 }
-}
+from score_calculator import ATTRIBUTE_WEIGHTS, REQUIRED_ATTRIBUTES, calculate_total_score, calculate_score, HIDDEN_ATTRIBUTES
 
 OPTIONAL_ATTRIBUTES = ['稳定', '大赛发挥', '抗压']
 
@@ -69,29 +28,6 @@ def clean_text(text):
     text = text.replace('\u200b', '').replace('\u200c', '').replace('\u200d', '')
     text = text.replace(' - 选择球员', '').replace('- 选择球员', '')
     return text.strip()
-
-def calculate_score(value, weights):
-    w1 = weights['w1']
-    w2 = weights['w2']
-    w3 = weights['w3']
-    w2_sp = weights['w2_sp']
-    w3_sp = weights['w3_sp']
-    
-    if w2_sp is not None:
-        if value <= 6:
-            return (value - 1) * w1
-        elif value <= 10:
-            return 5 * w1 + (value - 4) * w2_sp
-        else:
-            final_w3 = w3_sp if w3_sp is not None else w3
-            return 5 * w1 + 4 * w2_sp + (value - 10) * final_w3
-    else:
-        if value <= 6:
-            return (value - 1) * w1
-        elif value <= 12:
-            return 5 * w1 + (value - 6) * w2
-        else:
-            return 5 * w1 + 6 * w2 + (value - 12) * w3
 
 class TableParser(HTMLParser):
     def __init__(self):
@@ -127,13 +63,109 @@ class TableParser(HTMLParser):
         if self.in_th or self.in_td:
             self.current_cell += data
 
+class Database:
+    def __init__(self, db_path):
+        self.db_path = db_path
+        self.init_db()
+    
+    def init_db(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS players (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                score REAL,
+                normal_score REAL,
+                hidden_score REAL,
+                import_time TEXT,
+                attributes TEXT
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+    
+    def get_all_players(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM players ORDER BY id')
+        rows = cursor.fetchall()
+        conn.close()
+        
+        players = []
+        for row in rows:
+            import json
+            attributes = json.loads(row['attributes']) if row['attributes'] else {}
+            players.append({
+                'id': row['id'],
+                'name': row['name'],
+                'score': row['score'],
+                'normal_score': row['normal_score'],
+                'hidden_score': row['hidden_score'],
+                'import_time': row['import_time'],
+                'attributes': attributes
+            })
+        
+        return players
+    
+    def add_player(self, name, score, normal_score, hidden_score, import_time, attributes):
+        import json
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            'INSERT INTO players (name, score, normal_score, hidden_score, import_time, attributes) VALUES (?, ?, ?, ?, ?, ?)',
+            (name, score, normal_score, hidden_score, import_time, json.dumps(attributes))
+        )
+        
+        conn.commit()
+        conn.close()
+    
+    def update_player(self, player_id, name, attributes, score, normal_score, hidden_score):
+        import json
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            'UPDATE players SET name = ?, attributes = ?, score = ?, normal_score = ?, hidden_score = ? WHERE id = ?',
+            (name, json.dumps(attributes), score, normal_score, hidden_score, player_id)
+        )
+        
+        conn.commit()
+        conn.close()
+    
+    def delete_player(self, player_id):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('DELETE FROM players WHERE id = ?', (player_id,))
+        
+        conn.commit()
+        conn.close()
+    
+    def clear_all(self):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('DELETE FROM players')
+        
+        conn.commit()
+        conn.close()
+
 class FMPlayerScoreApp:
     def __init__(self, root):
         self.root = root
         self.root.title("FM球员评分工具")
         self.root.geometry("1200x700")
         
-        self.data_file = "players_data.json"
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'players.db')
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        self.db = Database(db_path)
+        
         self.players_data = []
         self.sort_column = None
         self.sort_reverse = False
@@ -142,16 +174,7 @@ class FMPlayerScoreApp:
         self.create_widgets()
     
     def load_data(self):
-        if os.path.exists(self.data_file):
-            try:
-                with open(self.data_file, 'r', encoding='utf-8') as f:
-                    self.players_data = json.load(f)
-            except:
-                self.players_data = []
-    
-    def save_data(self):
-        with open(self.data_file, 'w', encoding='utf-8') as f:
-            json.dump(self.players_data, f, ensure_ascii=False, indent=2)
+        self.players_data = self.db.get_all_players()
     
     def create_widgets(self):
         top_frame = ttk.Frame(self.root, padding="10")
@@ -170,17 +193,21 @@ class FMPlayerScoreApp:
         self.create_tree()
     
     def create_tree(self):
-        columns = ['姓名', '评分'] + REQUIRED_ATTRIBUTES
+        columns = ['姓名', '评分', '正常属性评分', '隐藏属性评分'] + REQUIRED_ATTRIBUTES
         self.tree = ttk.Treeview(self.tree_frame, columns=columns, show='headings')
         
         self.tree.heading('姓名', text='姓名', command=lambda: self.sort_by('姓名'))
         self.tree.heading('评分', text='评分', command=lambda: self.sort_by('评分'))
+        self.tree.heading('正常属性评分', text='正常属性评分', command=lambda: self.sort_by('正常属性评分'))
+        self.tree.heading('隐藏属性评分', text='隐藏属性评分', command=lambda: self.sort_by('隐藏属性评分'))
         
         for attr in REQUIRED_ATTRIBUTES:
             self.tree.heading(attr, text=attr, command=lambda a=attr: self.sort_by(a))
         
         self.tree.column('姓名', width=150)
         self.tree.column('评分', width=100)
+        self.tree.column('正常属性评分', width=120)
+        self.tree.column('隐藏属性评分', width=120)
         for attr in REQUIRED_ATTRIBUTES:
             self.tree.column(attr, width=50)
         
@@ -212,7 +239,7 @@ class FMPlayerScoreApp:
     def open_edit_dialog(self, player, player_idx):
         dialog = tk.Toplevel(self.root)
         dialog.title(f"编辑球员: {player['name']}")
-        dialog.geometry("600x700")
+        dialog.geometry("1100x500")
         dialog.transient(self.root)
         
         main_frame = ttk.Frame(dialog, padding="10")
@@ -235,8 +262,8 @@ class FMPlayerScoreApp:
         self.entry_vars = {}
         
         for i, attr in enumerate(REQUIRED_ATTRIBUTES):
-            row = i // 2
-            col = i % 2
+            row = i // 5
+            col = i % 5
             
             frame = ttk.Frame(scrollable_frame)
             frame.grid(row=row, column=col, sticky='w', padx=10, pady=5)
@@ -252,7 +279,7 @@ class FMPlayerScoreApp:
             if attr not in OPTIONAL_ATTRIBUTES:
                 label_text += " *"
             
-            label = ttk.Label(frame, text=label_text + ":", width=15, anchor='e')
+            label = ttk.Label(frame, text=label_text + ":", width=10, anchor='e')
             label.pack(side=tk.LEFT)
             
             entry = ttk.Entry(frame, textvariable=var, width=10)
@@ -293,13 +320,23 @@ class FMPlayerScoreApp:
                         has_missing = True
             
             if not has_missing and self.is_data_complete(self.players_data[player_idx]['attributes']):
-                self.players_data[player_idx]['score'] = self.calculate_total_score(
-                    self.players_data[player_idx]['attributes']
-                )
+                normal_score, hidden_score, score = calculate_total_score(self.players_data[player_idx]['attributes'])
             else:
-                self.players_data[player_idx]['score'] = None
+                score = None
+                normal_score = None
+                hidden_score = None
             
-            self.save_data()
+            player_id = self.players_data[player_idx]['id']
+            self.db.update_player(
+                player_id,
+                self.players_data[player_idx]['name'],
+                self.players_data[player_idx]['attributes'],
+                score,
+                normal_score,
+                hidden_score
+            )
+            
+            self.players_data[player_idx]['score'] = score
             self.refresh_tree()
             dialog.destroy()
         
@@ -372,19 +409,6 @@ class FMPlayerScoreApp:
                 missing.append(attr)
         return missing
     
-    def calculate_total_score(self, attributes):
-        total = 0
-        for attr, value in attributes.items():
-            if attr in ATTRIBUTE_WEIGHTS:
-                total += calculate_score(value, ATTRIBUTE_WEIGHTS[attr])
-        
-        has_all_required = all(attr in attributes for attr in REQUIRED_ATTRIBUTES if attr not in OPTIONAL_ATTRIBUTES)
-        
-        if not has_all_required:
-            return None
-        
-        return total
-    
     def import_file(self):
         html_path = self.html_path.get()
         
@@ -400,20 +424,14 @@ class FMPlayerScoreApp:
         
         imported_count = 0
         for player in players:
-            score = self.calculate_total_score(player['attributes'])
+            normal_score, hidden_score, score = calculate_total_score(player['attributes'])
+            import_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
-            player_data = {
-                'name': player['name'],
-                'attributes': player['attributes'],
-                'score': score,
-                'import_time': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }
-            
-            self.players_data.append(player_data)
+            self.db.add_player(player['name'], score, normal_score, hidden_score, import_time, player['attributes'])
             imported_count += 1
         
         if imported_count > 0:
-            self.save_data()
+            self.load_data()
             self.refresh_tree()
             messagebox.showinfo("成功", f"成功导入 {imported_count} 名球员!")
         else:
@@ -426,10 +444,14 @@ class FMPlayerScoreApp:
         for player in self.players_data:
             if player.get('score') is not None:
                 score_str = f"{player['score']:.2f}"
+                normal_str = f"{player.get('normal_score', 0):.2f}" if player.get('normal_score') is not None else ""
+                hidden_str = f"{player.get('hidden_score', 0):.2f}" if player.get('hidden_score') is not None else ""
             else:
-                score_str = "缺少数据"
+                score_str = ""
+                normal_str = ""
+                hidden_str = ""
             
-            values = [player['name'], score_str]
+            values = [player['name'], score_str, normal_str, hidden_str]
             
             for attr in REQUIRED_ATTRIBUTES:
                 attr_value = player.get('attributes', {}).get(attr, '-')
@@ -448,6 +470,10 @@ class FMPlayerScoreApp:
             self.players_data.sort(key=lambda x: x['name'], reverse=self.sort_reverse)
         elif column == '评分':
             self.players_data.sort(key=lambda x: x.get('score', 0) or 0, reverse=self.sort_reverse)
+        elif column == '正常属性评分':
+            self.players_data.sort(key=lambda x: x.get('normal_score', 0) or 0, reverse=self.sort_reverse)
+        elif column == '隐藏属性评分':
+            self.players_data.sort(key=lambda x: x.get('hidden_score', 0) or 0, reverse=self.sort_reverse)
         else:
             self.players_data.sort(
                 key=lambda x: x.get('attributes', {}).get(column, 0),
@@ -458,8 +484,8 @@ class FMPlayerScoreApp:
     
     def clear_all(self):
         if messagebox.askyesno("确认", "确定要清空所有数据吗?"):
-            self.players_data = []
-            self.save_data()
+            self.db.clear_all()
+            self.load_data()
             self.refresh_tree()
             messagebox.showinfo("成功", "已清空所有数据")
 
