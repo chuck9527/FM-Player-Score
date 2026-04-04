@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FM2024球员打分工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #555;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .attribute-group {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .attribute-group h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 14px;
+            text-align: center;
+        }
+        .attribute-item {
+            margin-bottom: 8px;
+        }
+        .attribute-item label {
+            display: block;
+            margin-bottom: 3px;
+            font-size: 12px;
+            color: #666;
+        }
+        .attribute-item input {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .position-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .position-section label {
+            margin-right: 15px;
+            font-size: 14px;
+        }
+        .calculate-btn {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .calculate-btn:hover {
+            background-color: #45a049;
+        }
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border: 1px solid #b0e0e6;
+        }
+        .result-section h2 {
+            color: #1e90ff;
+        }
+        .score-card {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .score-item {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .score-item h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 14px;
+        }
+        .score-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin: 10px 0;
+        }
+        .formula-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3cd;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+        }
+        .formula-info h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .formula-info p {
+            margin: 5px 0;
+            font-size: 13px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FM2024球员打分工具</h1>
+        
+        <div class="section">
+            <h2>球员属性输入</h2>
+            
+            <div class="attributes-grid">
+                <div class="attribute-group">
+                    <h3>技术属性</h3>
+                    <div class="attribute-item">
+                        <label>传球</label>
+                        <input type="number" id="passing" min="1" max="20" value="15">
+                    </div>
+                    <div class="attribute-item">
+                        <label>传中</label>
+                        <input type="number" id="crossing" min="1" max="20" value="9">
+                    </div>
+                    <div class="attribute-item">
+                        <label>射门</label>
+                        <input type="number" id="finishing" min="1" max="20" value="7">
+                    </div>
+                    <div class="attribute-item">
+                        <label>技术</label>
+                        <input type="number" id="technique" min="1" max="20" value="15">
+                    </div>
+                    <div class="attribute-item">
+                        <label>盘带</label>
+                        <input type="number" id="dribbling" min="1" max="20" value="9">
+                    </div>
+                    <div class="attribute-item">
+                        <label>停球</label>
+                        <input type="number" id="first_touch" min="1" max="20" value="15">
+                    </div>
+                    <div class="attribute-item">
+                        <label>头球</label>
+                        <input type="number" id="heading" min="1" max="20" value="13">
+                    </div>
+                    <div class="attribute-item">
+                        <label>远射</label>
+                        <input type="number" id="longshot" min="1" max="20" value="6">
+                    </div>
+                    <div class="attribute-item">
+                        <label>盯人</label>
+                        <input type="number" id="marking" min="1" max="20" value="16">
+                    </div>
+                    <div class="attribute-item">
+                        <label>抢断</label>
+                        <input type="number" id="tackling" min="1" max="20" value="16">
+                    </div>
+                    <div class="attribute-item">
+                        <label>防守站位</label>
+                        <input type="number" id="positioning" min="1" max="20" value="16">
+                    </div>
+                </div>
+                
+                <div class="attribute-group">
+                    <h3>精神属性</h3>
+                    <div class="attribute-item">
+                        <label>才华</label>
+                        <input type="number" id="flair" min="1" max="20" value="10">
+                    </div>
+                    <div class="attribute-item">
+                        <label>工作投入</label>
+                        <input type="number" id="work_rate" min="1" max="20" value="15">
+                    </div>
+                    <div class="attribute-item">
+                        <label>集中</label>
+                        <input type="number" id="concentration" min="1" max="20" value="14">
+                    </div>
+                    <div class="attribute-item">
+                        <label>决断</label>
+                        <input type="number" id="decisions" min="1" max="20" value="13">
+                    </div>
+                    <div class="attribute-item">
+                        <label>意志力</label>
+                        <input type="number" id="determination" min="1" max="20" value="17">
+                    </div>
+                    <div class="attribute-item">
+                        <label>团队合作</label>
+                        <input type="number" id="teamwork" min="1" max="20" value="14">
+                    </div>
+                    <div class="attribute-item">
+                        <label>视野</label>
+                        <input type="number" id="vision" min="1" max="20" value="14">
+                    </div>
+                    <div class="attribute-item">
+                        <label>无球跑动</label>
+                        <input type="number" id="off_the_ball" min="1" max="20" value="8">
+                    </div>
+                    <div class="attribute-item">
+                        <label>预判</label>
+                        <input type="number" id="anticipation" min="1" max="20" value="16">
+                    </div>
+                    <div class="attribute-item">
+                        <label>镇定</label>
+                        <input type="number" id="composure" min="1" max="20" value="16">
+                    </div>
+                    <div class="attribute-item">
+                        <label>侵略性</label>
+                        <input type="number" id="aggression" min="1" max="20" value="18">
+                    </div>
+                    <div class="attribute-item">
+                        <label>领导力</label>
+                        <input type="number" id="leadership" min="1" max="20" value="14">
+                    </div>
+                    <div class="attribute-item">
+                        <label>勇敢</label>
+                        <input type="number" id="bravery" min="1" max="20" value="17">
+                    </div>
+                </div>
+                
+                <div class="attribute-group">
+                    <h3>身体属性</h3>
+                    <div class="attribute-item">
+                        <label>爆发力</label>
+                        <input type="number" id="acceleration" min="1" max="20" value="12">
+                    </div>
+                    <div class="attribute-item">
+                        <label>速度</label>
+                        <input type="number" id="pace" min="1" max="20" value="12">
+                    </div>
+                    <div class="attribute-item">
+                        <label>灵活</label>
+                        <input type="number" id="agility" min="1" max="20" value="14">
+                    </div>
+                    <div class="attribute-item">
+                        <label>耐力</label>
+                        <input type="number" id="stamina" min="1" max="20" value="15">
+                    </div>
+                    <div class="attribute-item">
+                        <label>平衡</label>
+                        <input type="number" id="balance" min="1" max="20" value="14">
+                    </div>
+                    <div class="attribute-item">
+                        <label>强壮</label>
+                        <input type="number" id="strength" min="1" max="20" value="15">
+                    </div>
+                    <div class="attribute-item">
+                        <label>弹跳</label>
+                        <input type="number" id="jumping_reach" min="1" max="20" value="12">
+                    </div>
+                    <div class="attribute-item">
+                        <label>体质</label>
+                        <input type="number" id="natural_fitness" min="1" max="20" value="15">
+                    </div>
+                    <div class="attribute-item">
+                        <label>稳定</label>
+                        <input type="number" id="consistency" min="1" max="20" value="13">
+                    </div>
+                    <div class="attribute-item">
+                        <label>大赛</label>
+                        <input type="number" id="important_matches" min="1" max="20" value="11">
+                    </div>
+                    <div class="attribute-item">
+                        <label>抗压能力</label>
+                        <input type="number" id="pressure" min="1" max="20" value="14">
+                    </div>
+                </div>
+                
+                <div class="attribute-group">
+                    <h3>其他属性</h3>
+                    <div class="attribute-item">
+                        <label>罚点球</label>
+                        <input type="number" id="penalty_taking" min="1" max="20" value="10">
+                    </div>
+                    <div class="attribute-item">
+                        <label>角球</label>
+                        <input type="number" id="corners" min="1" max="20" value="6">
+                    </div>
+                    <div class="attribute-item">
+                        <label>界外球</label>
+                        <input type="number" id="long_throw" min="1" max="20" value="12">
+                    </div>
+                    <div class="attribute-item">
+                        <label>任意球</label>
+                        <input type="number" id="free_kick_taking" min="1" max="20" value="8">
+                    </div>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateScore()">计算得分</button>
+        </div>
+        
+        <div class="result-section">
+            <h2>得分结果</h2>
+            <div class="score-card">
+                <div class="score-item">
+                    <h3>综合得分</h3>
+                    <div class="score-value" id="overall-score">0</div>
+                </div>
+            </div>
+            
+            <div class="formula-info">
+                <h3>变区间阶梯公式说明</h3>
+                <p><strong>标准公式</strong>（大部分属性）：区间1-6, 6-12, 12-20</p>
+                <p>• 属性值≤6: (属性值-1)×权重1</p>
+                <p>• 6＜属性值≤12: 5×权重1+(属性值-6)×权重2</p>
+                <p>• 属性值＞12: 5×权重1+6×权重2+(属性值-12)×权重3</p>
+                <p><strong>特殊公式</strong>（才华/投入/意志/勇敢/稳定/大赛/抗压等）：区间1-6, 6-10, 10-20</p>
+                <p>• 属性值≤6: (属性值-1)×权重1</p>
+                <p>• 6＜属性值≤10: 5×权重1+(属性值-4)×权重2_special</p>
+                <p>• 属性值＞10: 5×权重1+4×权重2_special+(属性值-10)×权重3_special</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const attributeWeights = {
+            passing: { w1: 0.7000, w2: -0.0833, w3: 0.4667, w2_sp: null, w3_sp: null },
+            crossing: { w1: 0.5800, w2: -0.4000, w3: 0.4167, w2_sp: null, w3_sp: null },
+            marking: { w1: 0.1600, w2: -0.2717, w3: 0.5500, w2_sp: null, w3_sp: null },
+            penalty_taking: { w1: 0.0000, w2: 0.0000, w3: 0.0000, w2_sp: null, w3_sp: null },
+            technique: { w1: -0.7200, w2: 0.0167, w3: 0.3833, w2_sp: null, w3_sp: null },
+            corners: { w1: 0.0000, w2: 0.0000, w3: 0.0000, w2_sp: null, w3_sp: null },
+            long_throw: { w1: 0.0000, w2: 0.0000, w3: 0.0000, w2_sp: null, w3_sp: null },
+            dribbling: { w1: 1.2000, w2: 1.5333, w3: 1.3667, w2_sp: null, w3_sp: null },
+            tackling: { w1: 0.7000, w2: -0.6167, w3: 0.5000, w2_sp: null, w3_sp: null },
+            free_kick_taking: { w1: 0.0000, w2: 0.0000, w3: 0.0000, w2_sp: null, w3_sp: null },
+            finishing: { w1: 1.0600, w2: 0.3667, w3: 0.6667, w2_sp: null, w3_sp: null },
+            first_touch: { w1: -0.1200, w2: 0.0167, w3: 0.6333, w2_sp: null, w3_sp: null },
+            heading: { w1: 0.4600, w2: -0.0833, w3: 0.4667, w2_sp: null, w3_sp: null },
+            longshot: { w1: 0.2400, w2: 0.0833, w3: 0.8333, w2_sp: null, w3_sp: null },
+            flair: { w1: -0.22, w2: 0, w3: 0, w2_sp: -0.125, w3_sp: 0.175 },
+            positioning: { w1: 1.4200, w2: -0.4333, w3: 0.6667, w2_sp: null, w3_sp: null },
+            work_rate: { w1: 8.84, w2: 0, w3: 0, w2_sp: 2.2, w3_sp: 0.75 },
+            concentration: { w1: 3.0000, w2: 0.7500, w3: 0.6833, w2_sp: null, w3_sp: null },
+            decisions: { w1: 0.6000, w2: -0.7667, w3: 0.3667, w2_sp: null, w3_sp: null },
+            leadership: { w1: -0.82, w2: 0, w3: 0, w2_sp: 0.275, w3_sp: 0.4 },
+            aggression: { w1: 1.08, w2: 0, w3: 0, w2_sp: 0.225, w3_sp: 0.2625 },
+            vision: { w1: 1.4000, w2: -0.6500, w3: 0.2000, w2_sp: null, w3_sp: null },
+            teamwork: { w1: 0.4, w2: 0, w3: 0, w2_sp: -0.625, w3_sp: 0.1125 },
+            off_the_ball: { w1: 0.0400, w2: -0.0333, w3: 0.2667, w2_sp: null, w3_sp: null },
+            determination: { w1: 1.48, w2: 0, w3: 0, w2_sp: -0.125, w3_sp: 0.5875 },
+            bravery: { w1: -0.04, w2: 0, w3: 0.175, w2_sp: -0.4, w3_sp: null },
+            anticipation: { w1: 1.4600, w2: 0.8833, w3: 0.9000, w2_sp: null, w3_sp: null },
+            composure: { w1: 1.5400, w2: 0.1333, w3: 0.3667, w2_sp: null, w3_sp: null },
+            acceleration: { w1: 4.9250, w2: 7.2083, w3: 4.7292, w2_sp: null, w3_sp: null },
+            jumping_reach: { w1: 0.8400, w2: 1.3833, w3: 2.6000, w2_sp: null, w3_sp: null },
+            agility: { w1: 3.1000, w2: -0.3333, w3: 0.9667, w2_sp: null, w3_sp: null },
+            stamina: { w1: 2.5600, w2: 0.8333, w3: 0.5167, w2_sp: null, w3_sp: null },
+            balance: { w1: 0.6600, w2: 1.6833, w3: 1.1667, w2_sp: null, w3_sp: null },
+            strength: { w1: -0.4000, w2: 1.2833, w3: 0.9500, w2_sp: null, w3_sp: null },
+            pace: { w1: 5.9250, w2: 6.2292, w3: 4.8750, w2_sp: null, w3_sp: null },
+            natural_fitness: { w1: 0.9400, w2: 1.5333, w3: 0.3000, w2_sp: null, w3_sp: null },
+            consistency: { w1: 0.1, w2: 0, w3: 0, w2_sp: 0.3, w3_sp: 0.425 },
+            important_matches: { w1: 0.44, w2: 0, w3: 0, w2_sp: 0.125, w3_sp: 0.375 },
+            pressure: { w1: 3.64, w2: 0, w3: 0, w2_sp: 0.55, w3_sp: 0.8375 }
+        };
+        
+        function calculateScore(value, weights) {
+            const w1 = weights.w1;
+            const w2 = weights.w2;
+            const w3 = weights.w3;
+            const w2_sp = weights.w2_sp;
+            const w3_sp = weights.w3_sp;
+            
+            if (w2_sp !== null) {
+                if (value <= 6) {
+                    return (value - 1) * w1;
+                } else if (value <= 10) {
+                    return 5 * w1 + (value - 4) * w2_sp;
+                } else {
+                    const final_w3 = w3_sp !== null ? w3_sp : w3;
+                    return 5 * w1 + 4 * w2_sp + (value - 10) * final_w3;
+                }
+            } else {
+                if (value <= 6) {
+                    return (value - 1) * w1;
+                } else if (value <= 12) {
+                    return 5 * w1 + (value - 6) * w2;
+                } else {
+                    return 5 * w1 + 6 * w2 + (value - 12) * w3;
+                }
+            }
+        }
+        
+        function calculateScore() {
+            const attributes = [
+                'passing', 'crossing', 'finishing', 'technique', 'dribbling', 'first_touch', 'heading', 'longshot', 'marking', 'tackling', 'positioning',
+                'flair', 'work_rate', 'concentration', 'decisions', 'determination', 'teamwork', 'vision', 'off_the_ball', 'anticipation', 'composure', 'aggression', 'leadership', 'bravery',
+                'acceleration', 'pace', 'agility', 'stamina', 'balance', 'strength', 'jumping_reach', 'natural_fitness', 'consistency', 'important_matches', 'pressure',
+                'penalty_taking', 'corners', 'long_throw', 'free_kick_taking'
+            ];
+            
+            let totalScore = 0;
+            
+            attributes.forEach(attr => {
+                const value = parseInt(document.getElementById(attr).value) || 10;
+                const weights = attributeWeights[attr];
+                totalScore += calculateScore(value, weights);
+            });
+            
+            document.getElementById('overall-score').textContent = totalScore.toFixed(2);
+        }
+        
+        calculateScore();
+    </script>
+</body>
+</html>
