@@ -37,39 +37,31 @@ def clean_text(text):
     text = text.replace(' - 选择球员', '').replace('- 选择球员', '')
     return text.strip()
 
-class TableParser(HTMLParser):
+import re
+
+class TableParser:
     def __init__(self):
-        super().__init__()
-        self.in_th = False
-        self.in_td = False
         self.headers = []
         self.rows = []
-        self.current_row = []
-        self.current_cell = ""
         
-    def handle_starttag(self, tag, attrs):
-        if tag == 'th':
-            self.in_th = True
-            self.current_cell = ""
-        elif tag == 'td':
-            self.in_td = True
-            self.current_cell = ""
-        elif tag == 'tr':
-            self.current_row = []
-    
-    def handle_endtag(self, tag):
-        if tag == 'th':
-            self.in_th = False
-            self.headers.append(clean_text(self.current_cell))
-        elif tag == 'td':
-            self.in_td = False
-            self.current_row.append(clean_text(self.current_cell))
-        elif tag == 'tr' and self.current_row:
-            self.rows.append(self.current_row)
-    
-    def handle_data(self, data):
-        if self.in_th or self.in_td:
-            self.current_cell += data
+    def feed(self, html):
+        header_pattern = re.compile(r'<th[^>]*>([^<]*)</th>', re.IGNORECASE)
+        td_pattern = re.compile(r'<t[dh][^>]*>([^<]*)</t[dh]>', re.IGNORECASE)
+        
+        thead_match = re.search(r'<thead[^>]*>(.*?)</thead>', html, re.DOTALL | re.IGNORECASE)
+        if thead_match:
+            thead_content = thead_match.group(1)
+            self.headers = [clean_text(m.group(1)) for m in header_pattern.finditer(thead_content)]
+        
+        tbody_match = re.search(r'<tbody[^>]*>(.*?)</tbody>', html, re.DOTALL | re.IGNORECASE)
+        if tbody_match:
+            tbody_content = tbody_match.group(1)
+            tr_matches = re.finditer(r'<tr[^>]*>(.*?)</tr>', tbody_content, re.DOTALL | re.IGNORECASE)
+            for tr_match in tr_matches:
+                tr_content = tr_match.group(1)
+                cells = [clean_text(m.group(1)) for m in td_pattern.finditer(tr_content)]
+                if cells:
+                    self.rows.append(cells)
 
 class Database:
     def __init__(self, db_path):
